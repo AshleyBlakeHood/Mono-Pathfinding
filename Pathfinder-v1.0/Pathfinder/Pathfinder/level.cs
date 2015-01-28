@@ -16,6 +16,7 @@ namespace Pathfinder
     {
         private const int gridSize = 40; //set the map grid size
         public int [,] tiles; //a 2d array of 0's and 1's: 0 = free cell, 1 = blocked cell
+        public Dijkstra dijksra;
         
         //constructor initialises the grid array
         public Level()
@@ -24,6 +25,8 @@ namespace Pathfinder
             for (int i = 0; i < gridSize; i++)
                 for (int j = 0; j < gridSize; j++)
                     tiles[i,j] = 0;
+
+            dijksra = new Dijkstra();
         }
 
         //accessors

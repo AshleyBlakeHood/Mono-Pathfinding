@@ -34,6 +34,7 @@ namespace Pathfinder
         private Level level;
         private AiBotBase bot;
         private Player player;
+        
 
         //screen size and frame rate
         private const int TargetFrameRate = 50;
@@ -55,8 +56,8 @@ namespace Pathfinder
             level.Loadmap("../../../Content/1.txt");
             //instantiate bot and player objects
             player = new Player(30, 20);
-            bot = new AiBotPathfinderSimple2(10, 20, player.GridPosition);
-            bot.SetInitialPlayerPos(player);
+            bot = new AiBotStatic(10, 20);
+            
 
         }
 
@@ -112,6 +113,11 @@ namespace Pathfinder
                 player.SetNextLocation(currentPos, level);
             }   
 
+            if(keyState.IsKeyDown(Keys.P))
+            {
+                level.dijksra.Build(level, bot, player);
+            }
+
             //update bot and player
             bot.Update(gameTime, level, player);
             player.Update(gameTime, level);
@@ -144,8 +150,31 @@ namespace Pathfinder
                 for (int y = 0; y < sz; y++)
                 {
                     Coord2 pos = new Coord2((x*15), (y*15));
-                    if (level.tiles[x, y] == 0) spriteBatch.Draw(tile1Texture, pos, Color.White);
-                    else spriteBatch.Draw(tile2Texture, pos, Color.White);
+
+                    if(level.tiles[x,y] == 0)
+                    {
+                        if(level.dijksra.inPath[x,y])
+                        {
+                            spriteBatch.Draw(tile1Texture, pos, Color.Red);
+                        }
+                        else if (level.dijksra.closed[x, y])
+                        {
+                            spriteBatch.Draw(tile1Texture, pos, Color.Blue);
+                        }
+                        else
+                        {
+                            spriteBatch.Draw(tile1Texture, pos, Color.White);
+                        }
+                    }
+                    else
+                    {
+                        spriteBatch.Draw(tile2Texture, pos, Color.White);
+                    }
+
+                    /*if (level.tiles[x, y] == 0)
+                        spriteBatch.Draw(tile1Texture, pos, Color.White);
+                    else 
+                        spriteBatch.Draw(tile2Texture, pos, Color.White);*/
                 }
             }
         }
