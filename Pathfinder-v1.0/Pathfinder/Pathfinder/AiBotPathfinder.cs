@@ -94,15 +94,6 @@ namespace Pathfinder
             {
 
             }
-
-            /*if(level.ValidPosition(pos))
-            {
-                SetNextGridPosition(pos, level);
-            }
-            else
-            {
-
-            }*/
         }
 
         Coord2 SetNextPos(int movementDirection, Coord2 pos)
@@ -153,7 +144,7 @@ namespace Pathfinder
                 for(int x = 0; x < 40; x++)
                 {
                     closed[x, y] = false;
-                    cost[x, y] = 1000000.0f;
+                    cost[x, y] = 1000000000.0f;
                     link[x, y] = new Coord2(-1, -1);
                     inPath[x, y] = false;
                 }
@@ -161,11 +152,9 @@ namespace Pathfinder
 
             cost[bot.GridPosition.X, bot.GridPosition.Y] = 0.0f;
             bool done = false;
-
             while(!done)
             {
                 Coord2 bestPos = new Coord2(0,0);
-
                 for (int y = 0; y < 40; y++)
                 {
                     for (int x = 0; x < 40; x++)
@@ -174,16 +163,13 @@ namespace Pathfinder
                         {
                             bestPos.X = x;
                             bestPos.Y = y;
+                            Debug.WriteLine("Best Pos X: " + bestPos.X + "   Y:" + bestPos.Y);
                         }
                     }
                 }
 
+                //Debug.WriteLine(plr.GridPosition.X + " " + plr.GridPosition.Y + "::" + bot.GridPosition.X + " " + bot.GridPosition.Y);
                 closed[bestPos.X, bestPos.Y] = true;
-
-                if (bestPos == plr.GridPosition)
-                {
-                    done = true;
-                }
 
                 for(int y = -1; y <= 1; y++)
                 {
@@ -193,18 +179,31 @@ namespace Pathfinder
                         float newCost = cost[bestPos.X, bestPos.Y] + costMod;
                         try
                         {
-                            if (cost[bestPos.X + x, bestPos.Y + y] > newCost && level.ValidPosition(bestPos))
+                            if (bestPos.X > 0 && bestPos.Y > 0 && bestPos.X < 39 && bestPos.Y < 39)
                             {
-                                cost[bestPos.X + x, bestPos.Y + y] = newCost;
-                                link[bestPos.X + x, bestPos.Y + y] = bestPos;
+                                if (cost[bestPos.X + x, bestPos.Y + y] > newCost && level.ValidPosition(bestPos))
+                                {
+                                    cost[bestPos.X + x, bestPos.Y + y] = newCost;
+                                    link[bestPos.X + x, bestPos.Y + y].X = bestPos.X;
+                                    link[bestPos.X + x, bestPos.Y + y].Y = bestPos.Y;
+                                    //Debug.WriteLine("X: " + bestPos.X + " Y: " + bestPos.Y);
+                                }
                             }
                         }
                         catch
                         {
-
-                        }  
+                            Debug.WriteLine("Here");
+                        }
+                    
                     }
                 }
+                if (bestPos == plr.GridPosition)
+                {
+                    done = true;
+                    Debug.WriteLine("DONE");
+                }
+
+                
 
                 
              
@@ -215,8 +214,11 @@ namespace Pathfinder
             while(!done)
             {
                 inPath[nextClosed.X, nextClosed.Y] = true;
+
                 nextClosed = link[nextClosed.X, nextClosed.Y];
-                if (nextClosed == bot.GridPosition) done = true;
+
+                if (nextClosed == bot.GridPosition) 
+                    done = true;
             }
 
         }
