@@ -38,6 +38,7 @@
     <Compile Include="AiBotBase.cs" />
     <Compile Include="AiBotPathfinder.cs" />
     <Compile Include="AiBotRandom.cs" />
+    <Compile Include="AStar.cs" />
     <Compile Include="Coord2.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="level.cs" />

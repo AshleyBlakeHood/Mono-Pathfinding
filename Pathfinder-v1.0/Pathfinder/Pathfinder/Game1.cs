@@ -115,7 +115,7 @@ namespace Pathfinder
 
             if(keyState.IsKeyDown(Keys.P))
             {
-                level.dijksra.Build(level, bot, player);
+                level.aStar.Build(level, bot, player);
             }
 
             //update bot and player
@@ -153,11 +153,11 @@ namespace Pathfinder
 
                     if(level.tiles[x,y] == 0)
                     {
-                        if(level.dijksra.inPath[x,y])
+                        if(level.aStar.inPath[x,y])
                         {
                             spriteBatch.Draw(tile1Texture, pos, Color.Red);
                         }
-                        else if (level.dijksra.closed[x, y])
+                        else if (level.aStar.closed[x, y])
                         {
                             spriteBatch.Draw(tile1Texture, pos, Color.Blue);
                         }
