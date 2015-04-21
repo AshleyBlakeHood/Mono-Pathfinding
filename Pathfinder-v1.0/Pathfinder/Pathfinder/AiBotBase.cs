@@ -28,6 +28,9 @@ namespace Pathfinder
         int timerMs;
         const int moveTime = 400; //miliseconds
 
+        public List<Coord2> pathToFollow = new List<Coord2>();
+        public int pathIndex;
+
         //accessors
         public Coord2 GridPosition
         {

@@ -11,6 +11,8 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 //using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+using System.IO;
+using System.Diagnostics;
 
 #endregion
 
@@ -34,6 +36,7 @@ namespace Pathfinder
         private Level level;
         private AiBotBase bot;
         private Player player;
+        List<AiBotBase> allBots;
         
 
         //screen size and frame rate
@@ -53,11 +56,24 @@ namespace Pathfinder
             TargetElapsedTime = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / TargetFrameRate);
             //load level map
             level = new Level();
-            level.Loadmap("../../../Content/4.txt");
+            level.Loadmap("../../../Content/0.txt");
             //instantiate bot and player objects
             player = new Player(1, 1);
-            bot = new AiBotStatic(38, 38);
-            
+            //bot = new AiBotPathFollower(38, 38);
+            //bot = new AiBotStatic(38, 38);
+
+            allBots = new List<AiBotBase>() { new AiBotStatic(38, 38), new AiBotStatic(38, 15), new AiBotStatic(15, 38), new AiBotStatic(15,15), new AiBotStatic(5,5), new AiBotStatic(38,1), new AiBotStatic(1,38), new AiBotStatic(35,1), new AiBotStatic(1,35), new AiBotStatic(5,15), new AiBotStatic(15,5), new AiBotStatic(10,15), new AiBotStatic(15,10), new AiBotStatic(25,20), new AiBotStatic(20,25), new AiBotStatic(12,12), new AiBotStatic(1,8), new AiBotStatic(8,1), new AiBotStatic(32,18), new AiBotStatic(18,32)};
+
+            //allBots = new List<AiBotBase>() { new AiBotStatic(38, 38), new AiBotStatic(38, 15), new AiBotStatic(15, 38), new AiBotStatic(15, 15), new AiBotStatic(5, 5), new AiBotStatic(38, 1), new AiBotStatic(1, 38), new AiBotStatic(35, 1), new AiBotStatic(1, 35), new AiBotStatic(5, 15), new AiBotStatic(15, 5), new AiBotStatic(10, 15), new AiBotStatic(15, 10), new AiBotStatic(25, 20), new AiBotStatic(20, 25), new AiBotStatic(12, 12), new AiBotStatic(1, 8), new AiBotStatic(8, 1), new AiBotStatic(32, 18), new AiBotStatic(18, 32) };
+
+            foreach(AiBotBase b in allBots)
+            {
+                //b.Update(gameTime, level, player);
+                b.Update(new GameTime(), level, player);
+            }
+            bot = allBots[0];
+
+            DoTest();
 
         }
 
@@ -96,30 +112,35 @@ namespace Pathfinder
             {
                 currentPos.Y -= 1;
                 player.SetNextLocation(currentPos, level);
+                //level.aStar.Build(level, bot, player);
             }
             else if (keyState.IsKeyDown(Keys.Down))
             {
                 currentPos.Y += 1;
                 player.SetNextLocation(currentPos, level);
+                //level.aStar.Build(level, bot, player);
             }
             else if (keyState.IsKeyDown(Keys.Left))
             {
                 currentPos.X -= 1;
                 player.SetNextLocation(currentPos, level);
+                //level.aStar.Build(level, bot, player);
             }
             else if (keyState.IsKeyDown(Keys.Right))
             {
                 currentPos.X += 1;
                 player.SetNextLocation(currentPos, level);
+                //level.aStar.Build(level, bot, player);
             }   
 
             if(keyState.IsKeyDown(Keys.P))
             {
-                level.aStar.Build(level, bot, player);
+                level.dijkstra.Build(level, bot, player);
             }
 
             //update bot and player
             bot.Update(gameTime, level, player);
+            //allBots[1].Update(gameTime, level, player);
             player.Update(gameTime, level);
 
             base.Update(gameTime);
@@ -133,8 +154,12 @@ namespace Pathfinder
             //draw level map
             DrawGrid();
             //draw bot
-            spriteBatch.Draw(aiTexture, bot.ScreenPosition, Color.White);
-            //drawe player
+            foreach(AiBotBase b in allBots)
+            {
+                spriteBatch.Draw(aiTexture, b.ScreenPosition, Color.White);
+            }
+            //spriteBatch.Draw(aiTexture, bot.ScreenPosition, Color.White);
+            //draw player
             spriteBatch.Draw(playerTexture, player.ScreenPosition, Color.White);
             spriteBatch.End();
 
@@ -153,13 +178,17 @@ namespace Pathfinder
 
                     if(level.tiles[x,y] == 0)
                     {
-                        if(level.aStar.inPath[x,y])
+                        if(level.aStar.inPath[x,y] || level.dijkstra.inPath[x,y])
                         {
                             spriteBatch.Draw(tile1Texture, pos, Color.Red);
                         }
-                        else if (level.aStar.closed[x, y])
+                        else if (level.aStar.closed[x, y] || level.dijkstra.closed[x, y])
                         {
                             spriteBatch.Draw(tile1Texture, pos, Color.Blue);
+                        }
+                        else if(level.aStar.cost[x,y] < 100 || level.dijkstra.cost[x,y] < 100)
+                        {
+                            spriteBatch.Draw(tile1Texture, pos, Color.LightBlue);
                         }
                         else
                         {
@@ -177,6 +206,69 @@ namespace Pathfinder
                         spriteBatch.Draw(tile2Texture, pos, Color.White);*/
                 }
             }
+        }
+
+        private void DoTest()
+        {
+            List<string> results = new List<string>();
+
+            for (int algorithm = 0; algorithm < 4; algorithm++)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    string resultsThisTime = "";
+                    switch (algorithm)
+                    {
+                        case 0:
+                            //dijkstra
+                            resultsThisTime = i.ToString() + " map with Dijkstra,";
+                            break;
+                        case 1:
+                            //A*
+                            resultsThisTime = i.ToString() + " map with A*,";
+                            break;
+                        case 2:
+                            //Pre-computed A*
+                            resultsThisTime = i.ToString() + " map with pre-computed A*,";
+                            break;
+                        case 3:
+                            //Scent
+                            resultsThisTime = i.ToString() + " map with AvP Scent,";
+                            break;
+                    }
+                    level.Loadmap("../../../Content/" + i.ToString() + ".txt");
+                    for (int j = 0; j < 10; j++)
+                    {
+                        int time = 0;
+                        switch(algorithm)
+                        {
+                            case 0:
+                                //dijkstra
+                                time = level.dijkstra.Build(level, bot, player);
+                                resultsThisTime += time.ToString() + ",";
+                                break;
+                            case 1:
+                                //A*
+                                time = level.aStar.Build(level, bot, player);
+                                resultsThisTime += time.ToString() + ",";
+                                break;
+                            case 2:
+                                //Pre-computed A*
+                                break;
+                            case 3:
+                                //Scent
+                                break;
+                        }
+                        
+                    }
+                    results.Add(resultsThisTime);
+                }
+            }
+            foreach (string s in results)
+            {
+                Debug.WriteLine(s);
+            }
+
         }
     }
 }
